@@ -11,8 +11,6 @@ base {
 }
 
 repositories {
-    // Локальный Maven для подключения основного мода FastPing
-    // (предварительно выполните `gradlew publishToMavenLocal` в E:\quickping)
     mavenLocal()
     mavenCentral()
 }
@@ -23,7 +21,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Укажите точное имя собранного .jar файла из E:\quickping\build\libs\
     modImplementation files("E:/quickping/build/libs/fastping-1.0.0.jar")
 }
 
