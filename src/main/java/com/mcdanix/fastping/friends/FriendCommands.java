@@ -19,7 +19,6 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.arg
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 public class FriendCommands {
-
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("fping")
                 .then(literal("friend")
@@ -52,12 +51,14 @@ public class FriendCommands {
         MinecraftClient client = MinecraftClient.getInstance();
         String trimmed = secret.trim();
         if (trimmed.length() < 3) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Ключ должен быть не короче 3 символов."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.key_length"));
             return 0;
         }
         FriendStorage.setSecretKey(trimmed);
-        PingNetworkProtocol.sendLocalInfo(client, Text.literal("Ключ шифрования обновлён: ")
-                .append(Text.literal(trimmed).formatted(Formatting.AQUA)));
+        PingNetworkProtocol.sendLocalInfo(client, Text.translatable(
+                "message.fastping-friends.key_updated",
+                Text.literal(trimmed).formatted(Formatting.AQUA)
+        ));
         return 1;
     }
 
@@ -66,59 +67,65 @@ public class FriendCommands {
         if (client.player == null) return 0;
 
         if (nick.equalsIgnoreCase(client.player.getGameProfile().name())) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Нельзя добавить самого себя в друзья."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.self_request"));
             return 0;
         }
         if (FriendStorage.isFriend(nick)) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Игрок " + nick + " уже у вас в друзьях."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.already_added", nick));
             return 0;
         }
 
         FriendStorage.addOutgoingRequest(nick);
         PingNetworkProtocol.queueCommand(nick, "REQ");
-        PingNetworkProtocol.sendLocalInfo(client, Text.literal("Запрос в друзья отправлен игроку ")
-                .append(Text.literal(nick).formatted(Formatting.AQUA))
-                .append("."));
+        PingNetworkProtocol.sendLocalInfo(client, Text.translatable(
+                "message.fastping-friends.request_sent",
+                Text.literal(nick).formatted(Formatting.AQUA)
+        ));
         return 1;
     }
 
     private static int executeAccept(String nick) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!FriendStorage.hasIncomingRequest(nick) && !FriendStorage.isFriend(nick)) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Нет активного входящего запроса от " + nick + "."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.no_incoming_request", nick));
             return 0;
         }
+
         FriendStorage.addFriend(nick);
         PingNetworkProtocol.queueCommand(nick, "ACCEPT");
-        PingNetworkProtocol.sendLocalInfo(client, Text.literal("Вы приняли запрос от ")
-                .append(Text.literal(nick).formatted(Formatting.GREEN))
-                .append("."));
+        PingNetworkProtocol.sendLocalInfo(client, Text.translatable(
+                "message.fastping-friends.request_accepted",
+                Text.literal(nick).formatted(Formatting.GREEN)
+        ));
         return 1;
     }
 
     private static int executeDeny(String nick) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!FriendStorage.hasIncomingRequest(nick)) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Нет активного входящего запроса от " + nick + "."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.no_incoming_request", nick));
             return 0;
         }
+
         FriendStorage.removeIncomingRequest(nick);
         PingNetworkProtocol.queueCommand(nick, "DENY");
-        PingNetworkProtocol.sendLocalInfo(client, Text.literal("Вы отклонили запрос от ")
-                .append(Text.literal(nick).formatted(Formatting.RED))
-                .append("."));
+        PingNetworkProtocol.sendLocalInfo(client, Text.translatable(
+                "message.fastping-friends.request_denied",
+                Text.literal(nick).formatted(Formatting.RED)
+        ));
         return 1;
     }
 
     private static int executeRemove(String nick) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (FriendStorage.removeFriend(nick)) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Игрок ")
-                    .append(Text.literal(nick).formatted(Formatting.YELLOW))
-                    .append(" удалён из списка друзей."));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable(
+                    "message.fastping-friends.friend_removed",
+                    Text.literal(nick).formatted(Formatting.YELLOW)
+            ));
             return 1;
         }
-        PingNetworkProtocol.sendLocalInfo(client, Text.literal("Игрок " + nick + " не найден в списке друзей."));
+        PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.friend_not_found", nick));
         return 0;
     }
 
@@ -126,7 +133,7 @@ public class FriendCommands {
         MinecraftClient client = MinecraftClient.getInstance();
         Set<String> friends = FriendStorage.getFriends();
         if (friends.isEmpty()) {
-            PingNetworkProtocol.sendLocalInfo(client, Text.literal("Ваш список друзей пуст. Используйте /fping friend add <ник>"));
+            PingNetworkProtocol.sendLocalInfo(client, Text.translatable("message.fastping-friends.friends_empty"));
             return 1;
         }
 
@@ -137,14 +144,16 @@ public class FriendCommands {
             }
         }
 
-        MutableText listText = Text.literal("Друзья (" + friends.size() + "): ");
+        MutableText listText = Text.translatable("message.fastping-friends.friends_list", friends.size());
         boolean first = true;
         for (String friend : friends) {
-            if (!first) listText.append(Text.literal(", ").formatted(Formatting.GRAY));
+            if (!first) {
+                listText.append(Text.literal(", ").formatted(Formatting.GRAY));
+            }
             boolean isOnline = onlineNames.contains(friend.toLowerCase());
             listText.append(Text.literal(friend).formatted(isOnline ? Formatting.GREEN : Formatting.DARK_GRAY));
             if (isOnline) {
-                listText.append(Text.literal(" [Онлайн]").formatted(Formatting.DARK_GREEN));
+                listText.append(Text.translatable("message.fastping-friends.status_online").formatted(Formatting.DARK_GREEN));
             }
             first = false;
         }

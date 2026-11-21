@@ -18,5 +18,5 @@
   "gui.fastping-friends.btn_accept": "[Accept]",
   "gui.fastping-friends.btn_accept_hover": "Add %s to friends",
   "gui.fastping-friends.btn_deny": "[Deny]",
-  "gui.fastping-friends.btn_deny_hover": "Deny request from %s",
+  "gui.fastping-friends.btn_deny_hover": "Deny request from %s"
 }

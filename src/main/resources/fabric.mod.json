@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "fastping-friends",
-  "version": "${version}",
+  "version": "1.0.3",
   "name": "FastPing: Friends Addon",
   "description": "",
   "authors": [
@@ -16,7 +16,7 @@
   },
   "depends": {
     "fabricloader": ">=0.16.0",
-    "minecraft": "~1.21.11",
+    "minecraft": ">=1.21.6",
     "java": ">=21",
     "fabric-api": "*",
     "fastping": "*"
